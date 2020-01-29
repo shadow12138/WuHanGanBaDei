@@ -11,4 +11,5 @@
 ![image](https://github.com/shadow12138/WuHanDisease/blob/master/results/129/r2.png)
 
 # 全国新增病例增长趋势
+- 1.29 今天新增病例减少啦！！！相信一定会越来越好的！！！
 ![image](https://github.com/shadow12138/WuHanDisease/blob/master/results/129/r3.png)
