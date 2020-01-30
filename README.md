@@ -12,3 +12,6 @@
 
 # 全国新增病例增长趋势
 ![image](https://github.com/shadow12138/WuHanDisease/blob/master/results/130/r3.png)
+
+# 各省份城市确诊病例
+![image](https://github.com/shadow12138/WuHanDisease/blob/master/results/130/r5.png)
