@@ -4,7 +4,7 @@ import json
 from matplotlib.font_manager import FontProperties
 import re
 import os
-from pyecharts.charts import Line, Pie, Map
+from pyecharts.charts import Line, Pie, Map, Page
 from pyecharts import options as opts
 
 
@@ -179,9 +179,9 @@ def get_pyecharts_pie(month, day, labels, counts, title):
 
 
 def draw_tendency(month, day):
-    dates = ['1-%d' % i for i in range(16, 29)]
-    v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459]
-    v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840]
+    dates = ['1-%d' % i for i in range(16, day + 1)]
+    v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459, 1576]
+    v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840, 1032]
     c = (
         Line()
             .add_xaxis(dates)
@@ -235,12 +235,79 @@ def draw_map(month, day):
     c.render('charts/%d%d-疫情地图.html' % (month, day))
 
 
+def draw_multiple_pie(month, day):
+    max_width, max_height = 1400, 3000
+    pie = Pie(init_opts=opts.InitOpts(width='{}px'.format(max_width), height='{}px'.format(max_height)))
+    pie.set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
+                        title_opts=opts.TitleOpts(title='2020-%02d-%d 全国各省份城市确诊病例' % (month, day)))
+
+    h_center, v_center = 10, 40
+    horizontal_step, vertical_step = 350, 320
+    for p in get_province_data(month, day):
+        title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
+        labels = [city['cityName'] for city in p['cities']]
+        counts = [city['confirmedCount'] for city in p['cities']]
+        if len(labels) == 0:
+            continue
+        pie.add(
+            title,
+            [list(z) for z in zip(labels, counts)],
+            radius=[5, 80],
+            center=[h_center + 150, v_center + 110]
+        ).set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"), tooltip_opts=opts.TooltipOpts())
+
+        h_center += horizontal_step
+        if h_center + 200 > max_width:
+            h_center = 10
+            v_center += vertical_step
+
+    root = 'html-charts/%d%d' % (month, day)
+    create_dir(root)
+    pie.render('%s/省份信息.html' % root)
+
+
+def draw_multiple_pie_02(month, day):
+    max_width, max_height = 1400, 3000
+
+    page = Page(layout=Page.SimplePageLayout)
+    h_center, v_center = 10, 40
+    horizontal_step, vertical_step = 350, 320
+    pies = []
+    for p in get_province_data(month, day):
+        title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
+        labels = [city['cityName'] for city in p['cities']]
+        counts = [city['confirmedCount'] for city in p['cities']]
+        if len(labels) == 0:
+            continue
+        pie = Pie(init_opts=opts.InitOpts(width='{}px'.format(horizontal_step), height='{}px'.format(vertical_step)))
+        pie.set_global_opts(legend_opts=opts.LegendOpts(is_show=False), title_opts=opts.TitleOpts(title))
+        pie.add(
+            title,
+            [list(z) for z in zip(labels, counts)],
+            radius=[5, 80],
+            # center=[h_center + 150, v_center + 110]
+        ).set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"), tooltip_opts=opts.TooltipOpts())
+
+        h_center += horizontal_step
+        if h_center + 200 > max_width:
+            h_center = 10
+            v_center += vertical_step
+        page.add(pie)
+
+    root = 'html-charts/%d%d' % (month, day)
+    create_dir(root)
+    page.render('%s/省份信息2.html' % root)
+    page.render('provinces.html')
+
+
 if __name__ == '__main__':
-    m, d = 1, 29
+    m, d = 1, 30
     # get_html(m, d)
     # draw(m, d)
-    # compare(1, 28, 1, 29)
+    # compare(1, 29, 1, 30)
     # show_province_status(m, d, '云南')
     # show_province_status(m, d, None)
-    draw_tendency(m, d)
-    draw_map(m, d)
+    # draw_tendency(m, d)
+    # draw_map(m, d)
+    # draw_multiple_pie(m, d)
+    draw_multiple_pie_02(m, d)
