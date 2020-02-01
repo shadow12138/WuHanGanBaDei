@@ -24,6 +24,13 @@ def get_province_data(month, day, province_name=None):
     return None
 
 
+def get_total_statistic(month, day):
+    file = open('jsons/%d%d-总计.json' % (month, day), 'r', encoding='UTF-8')
+    json_object = json.loads(file.read())
+    file.close()
+    return json_object
+
+
 def get_province_status(month, day, province_name=None):
     if province_name:
         print(province_name)
@@ -120,10 +127,19 @@ def get_html(month, day):
     json_file = open('jsons/%d%d.json' % (month, day), 'w', encoding='UTF-8')
     matches = re.findall('\[[^>]+\]', html)
     for match in matches:
-        if 'provinceName' in json.loads(match)[0]:
+        json_array = json.loads(match)
+        json_object = json_array[0]
+        if 'provinceName' in json_object and json_object['provinceName'] == '湖北省':
             json_file.write(match)
             break
-    json_file.close()
+
+    total_statistic_file = open('jsons/%d%d-总计.json' % (month, day), 'w', encoding='UTF-8')
+    matches = re.findall('\{"id":1,[^(>})]+\}', html)
+    for match in matches:
+        if "infectSource" in match:
+            total_statistic_file.write(match)
+            break
+    total_statistic_file.close()
 
 
 def compare(m1, d1, m2, d2):
@@ -152,7 +168,10 @@ def compare(m1, d1, m2, d2):
 
 
 def get_pyecharts_pie(month, day, labels, counts, title):
-    title += '-%d例' % (sum(counts))
+    if title.find('全国') != -1:
+        title += '-%d例' % get_total_statistic(month, day)['confirmedCount']
+    else:
+        title += '-%d例' % (sum(counts))
     c = (
         Pie(init_opts=opts.InitOpts(width='1200px', height='700px'))
             .add(
@@ -179,9 +198,9 @@ def get_pyecharts_pie(month, day, labels, counts, title):
 
 
 def draw_tendency(month, day):
-    dates = ['1-%d' % i for i in range(16, day + 1)]
-    v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459, 1576]
-    v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840, 1032]
+    dates = ['1-16', '1-17', '1-18', '1-19', '1-20', '1-21', '1-22', '1-23', '1-24', '1-25', '1-26', '1-27', '1-28', '1-29', '1-30', '1-31']
+    v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2101]
+    v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840, 1032, 1221, 1347]
     c = (
         Line()
             .add_xaxis(dates)
@@ -204,8 +223,8 @@ def draw_tendency(month, day):
                                  splitline_opts=opts.SplitLineOpts(is_show=True),
                                  is_scale=True,
                                  axisline_opts=opts.AxisLineOpts(is_show=False)
-                             )
-                             )
+                             ))
+        # .set_series_opts(areastyle_opts=opts.AreaStyleOpts(opacity=0.5))
 
     )
     c.render('charts/%d%d-新增病例趋势图.html' % (month, day))
@@ -214,11 +233,12 @@ def draw_tendency(month, day):
 
 def draw_map(month, day):
     labels, counts, title = get_province_status(month, day, None)
+    total_count = get_total_statistic(month, day)['confirmedCount']
     c = (
         Map()
             .add("", [list(z) for z in zip(labels, counts)], "china")
             .set_global_opts(
-            title_opts=opts.TitleOpts(title="新型肺炎全国确诊病例"),
+            title_opts=opts.TitleOpts(title="2020年%d月%d日新型肺炎全国确诊病例-%s例" % (month, day, total_count)),
             visualmap_opts=opts.VisualMapOpts(
                 pieces=[
                     {'min': 1000, 'color': '#450704'},
@@ -272,7 +292,6 @@ def draw_multiple_pie_02(month, day):
     page = Page(layout=Page.SimplePageLayout)
     h_center, v_center = 10, 40
     horizontal_step, vertical_step = 350, 320
-    pies = []
     for p in get_province_data(month, day):
         title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
         labels = [city['cityName'] for city in p['cities']]
@@ -301,12 +320,10 @@ def draw_multiple_pie_02(month, day):
 
 
 if __name__ == '__main__':
-    m, d = 1, 30
+    m, d = 2, 1
     # get_html(m, d)
     # draw(m, d)
-    # compare(1, 29, 1, 30)
-    # show_province_status(m, d, '云南')
-    # show_province_status(m, d, None)
+    # compare(1, 30, 1, 31)
     # draw_tendency(m, d)
     # draw_map(m, d)
     # draw_multiple_pie(m, d)
