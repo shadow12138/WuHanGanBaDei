@@ -17,3 +17,6 @@
 
 # 各省份城市确诊病例
 ![image](https://github.com/shadow12138/WuHanDisease/blob/master/results/21/r4.png)
+
+# 各省份疫情地图
+![image](https://github.com/shadow12138/WuHanDisease/blob/master/results/21/r5.png)

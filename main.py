@@ -198,7 +198,8 @@ def get_pyecharts_pie(month, day, labels, counts, title):
 
 
 def draw_tendency(month, day):
-    dates = ['1-16', '1-17', '1-18', '1-19', '1-20', '1-21', '1-22', '1-23', '1-24', '1-25', '1-26', '1-27', '1-28', '1-29', '1-30', '1-31']
+    dates = ['1-16', '1-17', '1-18', '1-19', '1-20', '1-21', '1-22', '1-23', '1-24', '1-25', '1-26', '1-27', '1-28',
+             '1-29', '1-30', '1-31']
     v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2101]
     v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840, 1032, 1221, 1347]
     c = (
@@ -286,37 +287,75 @@ def draw_multiple_pie(month, day):
     pie.render('%s/省份信息.html' % root)
 
 
-def draw_multiple_pie_02(month, day):
-    max_width, max_height = 1400, 3000
-
+def draw_multiple_map(month, day):
     page = Page(layout=Page.SimplePageLayout)
-    h_center, v_center = 10, 40
-    horizontal_step, vertical_step = 350, 320
+    city_map = {"西双版纳": "西双版纳傣族自治州", "大理": "大理白族自治州", "红河": "红河哈尼族自治州", "德宏": "德宏傣族景颇族自治州",
+                "甘孜州": "甘孜藏族自治州", "凉山": "凉山彝族自治州", "阿坝州": "阿坝藏族羌族自治州",
+                "黔东南州": "黔东南苗族侗族自治州", "黔西南州": "黔西南依族苗族自治州", "黔南州": "黔南布依族苗族自治州",
+                "湘西自治州": "湘西土家族苗族自治州", "恩施": "恩施土家族苗族自治州"}
+    for p in get_province_data(month, day):
+        title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
+
+        # 城市
+        labels = []
+        for city in p['cities']:
+            city_name = city['cityName']
+            if p['provinceShortName'] in ['重庆', '上海', '北京', '天津']:
+                labels.append(city_name)
+            elif city_name in city_map:
+                labels.append(city_map[city_name])
+            else:
+                labels.append(city_name + "市")
+
+        # 数量
+        counts = [city['confirmedCount'] for city in p['cities']]
+        if len(labels) == 0:
+            continue
+        province_map = Map(init_opts=opts.InitOpts(width='350px', height='380px'))
+        province_map.add("", [list(z) for z in zip(labels, counts)], p['provinceShortName'])
+        province_map.set_series_opts(label_opts=opts.LabelOpts(font_size=8))
+        province_map.set_global_opts(
+            title_opts=opts.TitleOpts(title=title),
+            legend_opts=opts.LegendOpts(is_show=False),
+            visualmap_opts=opts.VisualMapOpts(
+                pieces=[
+                    {'min': 1000, 'color': '#450704'},
+                    {'max': 999, 'min': 500, 'color': '#75140B'},
+                    {'max': 499, 'min': 200, 'color': '#AD2217'},
+                    {'max': 199, 'min': 10, 'color': '#DE605B'},
+                    {'max': 9, 'color': '#FFFEE7'},
+                ],
+                is_piecewise=True,
+                is_show=False
+            ),
+        )
+        page.add(province_map)
+
+    root = 'html-charts/%d%d' % (month, day)
+    create_dir(root)
+    page.render('%s/省份地图.html' % root)
+
+
+def draw_multiple_pie_02(month, day):
+    page = Page(layout=Page.SimplePageLayout)
     for p in get_province_data(month, day):
         title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
         labels = [city['cityName'] for city in p['cities']]
         counts = [city['confirmedCount'] for city in p['cities']]
         if len(labels) == 0:
             continue
-        pie = Pie(init_opts=opts.InitOpts(width='{}px'.format(horizontal_step), height='{}px'.format(vertical_step)))
+        pie = Pie(init_opts=opts.InitOpts(width='350px', height='320px'))
         pie.set_global_opts(legend_opts=opts.LegendOpts(is_show=False), title_opts=opts.TitleOpts(title))
         pie.add(
             title,
             [list(z) for z in zip(labels, counts)],
             radius=[5, 80],
-            # center=[h_center + 150, v_center + 110]
         ).set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"), tooltip_opts=opts.TooltipOpts())
-
-        h_center += horizontal_step
-        if h_center + 200 > max_width:
-            h_center = 10
-            v_center += vertical_step
         page.add(pie)
 
     root = 'html-charts/%d%d' % (month, day)
     create_dir(root)
-    page.render('%s/省份信息2.html' % root)
-    page.render('provinces.html')
+    page.render('%s/省份信息.html' % root)
 
 
 if __name__ == '__main__':
@@ -328,3 +367,4 @@ if __name__ == '__main__':
     # draw_map(m, d)
     # draw_multiple_pie(m, d)
     draw_multiple_pie_02(m, d)
+    draw_multiple_map(m, d)
