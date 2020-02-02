@@ -132,6 +132,7 @@ def get_html(month, day):
         if 'provinceName' in json_object and json_object['provinceName'] == '湖北省':
             json_file.write(match)
             break
+    json_file.close()
 
     total_statistic_file = open('jsons/%d%d-总计.json' % (month, day), 'w', encoding='UTF-8')
     matches = re.findall('\{"id":1,[^(>})]+\}', html)
@@ -168,7 +169,7 @@ def compare(m1, d1, m2, d2):
 
 
 def get_pyecharts_pie(month, day, labels, counts, title):
-    if title.find('全国') != -1:
+    if title.find('全国') != -1 and title.find('新增') == -1:
         title += '-%d例' % get_total_statistic(month, day)['confirmedCount']
     else:
         title += '-%d例' % (sum(counts))
@@ -199,9 +200,9 @@ def get_pyecharts_pie(month, day, labels, counts, title):
 
 def draw_tendency(month, day):
     dates = ['1-16', '1-17', '1-18', '1-19', '1-20', '1-21', '1-22', '1-23', '1-24', '1-25', '1-26', '1-27', '1-28',
-             '1-29', '1-30', '1-31']
-    v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2101]
-    v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840, 1032, 1221, 1347]
+             '1-29', '1-30', '1-31', '2-01']
+    v0 = [4, 17, 59, 78, 92, 149, 131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2101, 2602]
+    v1 = [4, 17, 59, 77, 72, 105, 69, 105, 180, 323, 371, 1291, 840, 1032, 1221, 1347, 1921]
     c = (
         Line()
             .add_xaxis(dates)
@@ -359,10 +360,10 @@ def draw_multiple_pie_02(month, day):
 
 
 if __name__ == '__main__':
-    m, d = 2, 1
+    m, d = 2, 2
     # get_html(m, d)
     # draw(m, d)
-    # compare(1, 30, 1, 31)
+    # compare(2, 1, 2, 2)
     # draw_tendency(m, d)
     # draw_map(m, d)
     # draw_multiple_pie(m, d)
