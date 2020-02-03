@@ -6,6 +6,8 @@ import re
 import os
 from pyecharts.charts import Line, Pie, Map, Page
 from pyecharts import options as opts
+from colour import Color
+
 
 
 def get_province_data(month, day, province_name=None):
@@ -319,28 +321,33 @@ def draw_multiple_map(month, day):
     page = Page(layout=Page.SimplePageLayout)
     width, height = '350px', '380px'
     page.add(draw_map(month, day, size=(width, height)))
-    city_map = {"西双版纳": "西双版纳傣族自治州", "大理": "大理白族自治州", "红河": "红河哈尼族自治州", "德宏": "德宏傣族景颇族自治州",
-                "甘孜州": "甘孜藏族自治州", "凉山州": "凉山彝族自治州", "阿坝州": "阿坝藏族羌族自治州",
-                "黔东南州": "黔东南苗族侗族自治州", "黔西南州": "黔西南依族苗族自治州", "黔南州": "黔南布依族苗族自治州",
-                "湘西自治州": "湘西土家族苗族自治州", "恩施州": "恩施土家族苗族自治州", "恩施": "恩施土家族苗族自治州", "神农架林区": "神农架林区"}
+
+    # 城市名称
+    defined_cities = [line.strip() for line in open('py_echarts_city_names.txt', 'r', encoding='UTF-8').readlines()]
+
     for p in get_province_data(month, day):
         title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
 
         # 城市
         labels = []
         for city in p['cities']:
-            city_name = city['cityName']
-            if city_name in city_map:
-                labels.append(city_map[city_name])
-            elif p['provinceShortName'] in ['重庆', '上海', '北京', '天津']:
-                labels.append(city_name)
+            name = city['cityName']
+            if name.endswith('区'):
+                labels.append(name)
             else:
-                labels.append(city_name + "市")
+                for d_name in defined_cities:
+                    if len((set(d_name) & set(name))) == len(name):
+                        if name == d_name:
+                            labels.append(name + '市')
+                        else:
+                            labels.append(d_name)
+                        break
 
         # 数量
         counts = [city['confirmedCount'] for city in p['cities']]
         if len(labels) == 0:
             continue
+
         province_map = Map(init_opts=opts.InitOpts(width=width, height=height))
         province_map.add("", [list(z) for z in zip(labels, counts)], p['provinceShortName'])
         province_map.set_series_opts(label_opts=opts.LabelOpts(font_size=8))
@@ -348,13 +355,7 @@ def draw_multiple_map(month, day):
             title_opts=opts.TitleOpts(title=title),
             legend_opts=opts.LegendOpts(is_show=False),
             visualmap_opts=opts.VisualMapOpts(
-                pieces=[
-                    {'min': 1000, 'color': '#450704'},
-                    {'max': 999, 'min': 500, 'color': '#75140B'},
-                    {'max': 499, 'min': 200, 'color': '#AD2217'},
-                    {'max': 199, 'min': 10, 'color': '#DE605B'},
-                    {'max': 9, 'color': '#FFFEE7'},
-                ],
+                pieces=get_pieces(min(counts), max(counts)),
                 is_piecewise=True,
                 is_show=False
             ),
@@ -364,6 +365,17 @@ def draw_multiple_map(month, day):
     root = 'html-charts/%d%d' % (month, day)
     create_dir(root)
     page.render('%s/省份地图.html' % root)
+
+
+def get_pieces(min_value, max_value, ranges=10):
+    colors = list(Color('#EE9678').range_to(Color('#B72D28'), ranges))
+    step = (max_value - min_value) / ranges
+    pieces = []
+    for i in range(ranges):
+        start, end = i * step + min_value, (i + 1) * step + min_value
+        pieces.append({'min': start, 'color': colors[i].hex, 'max': None if end >= max_value else end})
+    print(pieces)
+    return pieces
 
 
 def draw_multiple_pie_02(month, day):
@@ -396,8 +408,8 @@ if __name__ == '__main__':
     # get_html(m, d)
     # draw(m, d)
     # compare(2, 2, 2, 3)
-    draw_tendency(m, d)
+    # draw_tendency(m, d)
     # draw_map(m, d)
     # draw_multiple_pie(m, d)
     # draw_multiple_pie_02(m, d)
-    # draw_multiple_map(m, d)
+    draw_multiple_map(m, d)
