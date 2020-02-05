@@ -1,13 +1,9 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import json
-from matplotlib.font_manager import FontProperties
 import re
 import os
 from pyecharts.charts import Line, Pie, Map, Page
 from pyecharts import options as opts
 from colour import Color
-
 
 
 def get_province_data(month, day, province_name=None):
@@ -43,7 +39,6 @@ def get_province_status(month, day, province_name=None):
             data.append((city['cityName'], city['confirmedCount']))
         data.sort(key=lambda x: -x[1])
 
-        title = '%s2020年%d月%d日确诊病例' % (province_name, month, day)
     else:
         json_array = get_province_data(month, day, province_name)
 
@@ -52,69 +47,14 @@ def get_province_status(month, day, province_name=None):
             data.append((province['provinceShortName'], province['confirmedCount']))
         data.sort(key=lambda x: -x[1])
 
-        title = '全国2020年%d月%d日确诊病例' % (month, day)
-
     labels = [d[0] for d in data]
     counts = [d[1] for d in data]
-    return labels, counts, title
-
-
-def show_province_status(month, day, province_name=None):
-    labels, counts, title = get_province_status(month, day, province_name)
-    # draw_pie(month, day, labels, counts, title)
-    get_pyecharts_pie(month, day, labels, counts, title)
-
-
-def draw_pie(month, day, labels, counts, title):
-    if len(labels) == 0:
-        return
-
-    labels = np.array(labels)
-    counts = np.array(counts)
-    title += '-%d例' % sum(counts)
-    fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
-
-    explode = np.zeros(len(labels))
-    explode[np.argmax(counts)] = 0.1
-    wedges, texts = ax.pie(counts,
-                           wedgeprops=dict(width=0.5),
-                           startangle=-40,
-                           explode=explode)
-
-    font = FontProperties(fname='font/ZiXinFangYunYuanTi-2.ttf')
-    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-    kw = dict(arrowprops=dict(arrowstyle="-"),
-              bbox=bbox_props, zorder=0, va="center",
-              fontproperties=font)
-
-    for i, p in enumerate(wedges[:6]):
-        ang = (p.theta2 - p.theta1) / 2. + p.theta1
-        y = np.sin(np.deg2rad(ang))
-        x = np.cos(np.deg2rad(ang))
-        horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
-        connectionstyle = "angle,angleA=0,angleB={}".format(ang)
-        kw["arrowprops"].update({"connectionstyle": connectionstyle})
-        ax.annotate('%s-%d例' % (labels[i], counts[i]), xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
-                    horizontalalignment=horizontalalignment, **kw)
-
-    ax.set_title(title, fontproperties=font)
-
-    root = 'charts/%d%d' % (month, day)
-    create_dir(root)
-    plt.savefig('%s/%s.jpg' % (root, title))
-    plt.show()
+    return labels, counts
 
 
 def create_dir(root):
     if not os.path.exists(root):
         os.makedirs(root)
-
-
-def draw(month, day):
-    provinces = get_province_data(month, day)
-    for p in provinces:
-        show_province_status(month, day, p['provinceShortName'])
-    show_province_status(month, day)
 
 
 def get_html(month, day):
@@ -126,9 +66,11 @@ def get_html(month, day):
     html_file.write(html)
     html_file.close()
 
+    # 省份数据
     json_file = open('jsons/%d%d.json' % (month, day), 'w', encoding='UTF-8')
     matches = re.findall('\[[^>]+\]', html)
     for match in matches:
+        print(match)
         json_array = json.loads(match)
         json_object = json_array[0]
         if 'provinceName' in json_object and json_object['provinceName'] == '湖北省':
@@ -136,6 +78,7 @@ def get_html(month, day):
             break
     json_file.close()
 
+    # 总体统计数据
     total_statistic_file = open('jsons/%d%d-总计.json' % (month, day), 'w', encoding='UTF-8')
     matches = re.findall('\{"id":1,[^(>})]+\}', html)
     for match in matches:
@@ -145,83 +88,16 @@ def get_html(month, day):
     total_statistic_file.close()
 
 
-def compare(m1, d1, m2, d2):
-    ps1 = get_province_data(m1, d1)
-    ps2 = get_province_data(m2, d2)
-    ps_dict1 = {}
-    ps_dict2 = {}
-    for p in ps1:
-        ps_dict1[p['provinceShortName']] = p['confirmedCount']
-    for p in ps2:
-        ps_dict2[p['provinceShortName']] = p['confirmedCount']
-
-    data = []
-    for key in ps_dict2:
-        increased_count = ps_dict2[key]
-        if key in ps_dict1:
-            increased_count -= ps_dict1[key]
-        data.append((key, increased_count))
-    data.sort(key=lambda x: -x[1])
-
-    labels = [d[0] for d in data]
-    counts = [d[1] for d in data]
-    title = '2020年%d月%d日全国新增确诊病例' % (m2, d2)
-    draw_pie(m2, d2, labels, counts, title)
-    get_pyecharts_pie(m2, d2, labels, counts, title)
-
-
-def get_pyecharts_pie(month, day, labels, counts, title, size=None):
-    if title.find('全国') != -1 and title.find('新增') == -1:
-        title += '-%d例' % get_total_statistic(month, day)['confirmedCount']
-    else:
-        title += '-%d例' % (sum(counts))
-
-    if not size:
-        pie = Pie(init_opts=opts.InitOpts(width='1200px', height='700px'))
-        pie.add(
-            "",
-            [list(z) for z in zip(labels, counts)],
-            radius=["40%", "80%"],
-            center=['50%', '60%'],
-
-        )
-        pie.set_global_opts(
-            title_opts=opts.TitleOpts(title=title),
-            legend_opts=opts.LegendOpts(
-                orient="vertical", pos_top="15%", pos_left="2%"
-            ),
-        )
-    else:
-        pie = Pie(init_opts=opts.InitOpts(width=size[0], height=size[1]))
-        pie.add(
-            "",
-            [list(z) for z in zip(labels, counts)],
-            radius=[5, 80],
-
-        )
-        pie.set_global_opts(
-            title_opts=opts.TitleOpts(title='全国-%d例' % get_total_statistic(month, day)['confirmedCount']),
-            legend_opts=opts.LegendOpts(
-                is_show=False
-            ),
-        )
-
-    pie.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
-    root = 'html-charts/%d%d' % (month, day)
-    create_dir(root)
-    pie.render('%s/%s.html' % (root, title))
-    return pie
-
-
 def draw_tendency(month, day):
     dates = ['1-22', '1-23', '1-24', '1-25', '1-26', '1-27', '1-28',
-             '1-29', '1-30', '1-31', '2-01', '2-02']
-    v0 = [131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2101, 2602, 2829]
+             '1-29', '1-30', '1-31', '2-01', '2-02', '2-04', '2-05']
+    v0 = [131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2102, 2590, 2829, 3235, 3887]
 
-    v1 = [69, 105, 180, 323, 371, 1291, 840, 1032, 1221, 1347, 1921, 2590, 2103]
+    v1 = [69, 105, 180, 323, 371, 1291, 840, 1032, 1220, 1347, 1921, 2103, 2345, 3156]
     v2 = [v0[i] - v1[i] for i in range(len(v0))]
+
     c = (
-        Line(init_opts=opts.InitOpts(width='800px', height='500px'))
+        Line(init_opts=opts.InitOpts(width='1000px', height='500px'))
             .add_xaxis(dates)
             .add_yaxis("全国新增确诊病例", v0,
                        is_smooth=True,
@@ -230,20 +106,20 @@ def draw_tendency(month, day):
                            color='#B44038', border_color="#B44038", border_width=5
                        ))
             .add_yaxis("湖北新增确诊病例", v1, is_smooth=True,
-                       linestyle_opts=opts.LineStyleOpts(width=2, color='#6FA0A7'),
+                       linestyle_opts=opts.LineStyleOpts(width=2, color='#4E87ED'),
                        label_opts=opts.LabelOpts(position='bottom'),
                        itemstyle_opts=opts.ItemStyleOpts(
-                           color='#6FA0A7', border_color="#6FA0A7", border_width=3
+                           color='#4E87ED', border_color="#4E87ED", border_width=3
                        ))
             .add_yaxis("其他省份新增病例", v2, is_smooth=True,
-                       linestyle_opts=opts.LineStyleOpts(width=2, color='#F9DB51'),
+                       linestyle_opts=opts.LineStyleOpts(width=2, color='#F1A846'),
                        label_opts=opts.LabelOpts(position='bottom'),
                        itemstyle_opts=opts.ItemStyleOpts(
-                           color='#F9DB51', border_color="#F9DB51", border_width=3
+                           color='#F1A846', border_color="#F1A846", border_width=3
                        ))
             .set_global_opts(title_opts=opts.TitleOpts(title=""),
                              yaxis_opts=opts.AxisOpts(
-                                 max_=3000,
+                                 max_=5000,
                                  min_=100,
                                  type_="log",
                                  name="y",
@@ -251,84 +127,48 @@ def draw_tendency(month, day):
                                  is_scale=True,
                                  axisline_opts=opts.AxisLineOpts(is_show=False)
                              ))
-        # .set_series_opts(areastyle_opts=opts.AreaStyleOpts(opacity=0.5))
 
     )
-    c.render('charts/%d%d-新增病例趋势图.html' % (month, day))
-    return c
-
-
-def draw_map(month, day, size=None):
-    labels, counts, title = get_province_status(month, day, None)
-    total_count = get_total_statistic(month, day)['confirmedCount']
-
-    if not size:
-        country_map = Map()
-    else:
-        country_map = Map(init_opts=opts.InitOpts(width=size[0], height=size[1]))
-
-    country_map.add("", [list(z) for z in zip(labels, counts)], "china")
-    country_map.set_global_opts(
-        title_opts=opts.TitleOpts(title="2020年%d月%d日全国确诊病例-%s例" % (month, day, total_count)),
-        visualmap_opts=opts.VisualMapOpts(
-            pieces=[
-                {'min': 1000, 'color': '#450704'},
-                {'max': 999, 'min': 100, 'color': '#75140B'},
-                {'max': 99, 'min': 10, 'color': '#AD2217'},
-                {'max': 9, 'min': 1, 'color': '#DE605B'},
-                {'max': 0, 'color': '#FFFEE7'},
-            ],
-            is_piecewise=True
-        ),
-    )
-
-    country_map.render('charts/%d%d-疫情地图.html' % (month, day))
-    return country_map
-
-
-def draw_multiple_pie(month, day):
-    max_width, max_height = 1400, 3000
-    pie = Pie(init_opts=opts.InitOpts(width='{}px'.format(max_width), height='{}px'.format(max_height)))
-    pie.set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
-                        title_opts=opts.TitleOpts(title='2020-%02d-%d 全国各省份城市确诊病例' % (month, day)))
-
-    h_center, v_center = 10, 40
-    horizontal_step, vertical_step = 350, 320
-    for p in get_province_data(month, day):
-        title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
-        labels = [city['cityName'] for city in p['cities']]
-        counts = [city['confirmedCount'] for city in p['cities']]
-        if len(labels) == 0:
-            continue
-        pie.add(
-            title,
-            [list(z) for z in zip(labels, counts)],
-            radius=[5, 80],
-            center=[h_center + 150, v_center + 110]
-        ).set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"), tooltip_opts=opts.TooltipOpts())
-
-        h_center += horizontal_step
-        if h_center + 200 > max_width:
-            h_center = 10
-            v_center += vertical_step
-
     root = 'html-charts/%d%d' % (month, day)
     create_dir(root)
-    pie.render('%s/省份信息.html' % root)
+    c.render('%s/新增病例趋势图.html' % root)
+
+
+def get_map(labels, counts, where, title, size, pieces):
+    my_map = Map(init_opts=opts.InitOpts(width=size[0], height=size[1]))
+    my_map.add("", [list(z) for z in zip(labels, counts)], where)
+    my_map.set_series_opts(label_opts=opts.LabelOpts(font_size=8))
+    my_map.set_global_opts(
+        title_opts=opts.TitleOpts(title=title),
+        legend_opts=opts.LegendOpts(is_show=False),
+        visualmap_opts=opts.VisualMapOpts(
+            pieces=pieces,
+            is_piecewise=True,
+            is_show=False
+        ),
+    )
+    return my_map
 
 
 def draw_multiple_map(month, day):
     page = Page(layout=Page.SimplePageLayout)
-    width, height = '350px', '380px'
-    page.add(draw_map(month, day, size=(width, height)))
+    size = ('350px', '380px')
 
-    # 城市名称
+    # 全国疫情地图
+    labels, counts = get_province_status(month, day)
+    country_map = get_map(labels=labels, counts=counts,
+                          title='全国-%s例' % get_total_statistic(month, day)['confirmedCount'], size=size, where='china',
+                          pieces=get_default_pieces())
+    page.add(country_map)
+
+    # 已知城市名称
     defined_cities = [line.strip() for line in open('py_echarts_city_names.txt', 'r', encoding='UTF-8').readlines()]
 
+    # 省份疫情地图
     for p in get_province_data(month, day):
         title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
 
-        # 城市
+        # 城市映射
         labels = []
         for city in p['cities']:
             name = city['cityName']
@@ -348,18 +188,9 @@ def draw_multiple_map(month, day):
         if len(labels) == 0:
             continue
 
-        province_map = Map(init_opts=opts.InitOpts(width=width, height=height))
-        province_map.add("", [list(z) for z in zip(labels, counts)], p['provinceShortName'])
-        province_map.set_series_opts(label_opts=opts.LabelOpts(font_size=8))
-        province_map.set_global_opts(
-            title_opts=opts.TitleOpts(title=title),
-            legend_opts=opts.LegendOpts(is_show=False),
-            visualmap_opts=opts.VisualMapOpts(
-                pieces=get_pieces(min(counts), max(counts)),
-                is_piecewise=True,
-                is_show=False
-            ),
-        )
+        pieces = get_pieces(min(counts), max(counts))
+        province_map = get_map(labels=labels, counts=counts, title=title, size=size, where=p['provinceShortName'],
+                               pieces=pieces)
         page.add(province_map)
 
     root = 'html-charts/%d%d' % (month, day)
@@ -374,29 +205,42 @@ def get_pieces(min_value, max_value, ranges=10):
     for i in range(ranges):
         start, end = i * step + min_value, (i + 1) * step + min_value
         pieces.append({'min': start, 'color': colors[i].hex, 'max': None if end >= max_value else end})
-    print(pieces)
     return pieces
 
 
-def draw_multiple_pie_02(month, day):
+def get_default_pieces():
+    return [
+        {'min': 1000, 'color': '#450704'},
+        {'max': 999, 'min': 100, 'color': '#75140B'},
+        {'max': 99, 'min': 10, 'color': '#AD2217'},
+        {'max': 9, 'min': 1, 'color': '#DE605B'},
+        {'max': 0, 'color': '#FFFEE7'},
+    ]
+
+
+def get_pie(labels, counts, title, size):
+    pie = Pie(init_opts=opts.InitOpts(width=size[0], height=size[1]))
+    pie.set_global_opts(legend_opts=opts.LegendOpts(is_show=False), title_opts=opts.TitleOpts(title))
+    pie.add(
+        title,
+        [list(z) for z in zip(labels, counts)],
+        radius=[5, 80],
+    ).set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"), tooltip_opts=opts.TooltipOpts())
+    return pie
+
+
+def draw_multiple_pie(month, day):
     page = Page(layout=Page.SimplePageLayout)
-    width, height = '350px', '320px'
-    labels, counts, title = get_province_status(month, day)
-    page.add(get_pyecharts_pie(month, day, labels, counts, title, size=('360px', '330px')))
+    labels, counts = get_province_status(month, day)
+    page.add(
+        get_pie(labels, counts, '全国-%s例' % get_total_statistic(month, day)['confirmedCount'], size=('360px', '330px')))
     for p in get_province_data(month, day):
         title = '%s-%d例' % (p['provinceShortName'], p['confirmedCount'])
         labels = [city['cityName'] for city in p['cities']]
         counts = [city['confirmedCount'] for city in p['cities']]
         if len(labels) == 0:
             continue
-        pie = Pie(init_opts=opts.InitOpts(width=width, height=height))
-        pie.set_global_opts(legend_opts=opts.LegendOpts(is_show=False), title_opts=opts.TitleOpts(title))
-        pie.add(
-            title,
-            [list(z) for z in zip(labels, counts)],
-            radius=[5, 80],
-        ).set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"), tooltip_opts=opts.TooltipOpts())
-        page.add(pie)
+        page.add(get_pie(labels, counts, title, size=('350px', '320px')))
 
     root = 'html-charts/%d%d' % (month, day)
     create_dir(root)
@@ -404,12 +248,8 @@ def draw_multiple_pie_02(month, day):
 
 
 if __name__ == '__main__':
-    m, d = 2, 3
-    # get_html(m, d)
-    # draw(m, d)
-    # compare(2, 2, 2, 3)
-    # draw_tendency(m, d)
-    # draw_map(m, d)
-    # draw_multiple_pie(m, d)
-    # draw_multiple_pie_02(m, d)
+    m, d = 2, 5
+    get_html(m, d)
+    draw_tendency(m, d)
+    draw_multiple_pie(m, d)
     draw_multiple_map(m, d)
