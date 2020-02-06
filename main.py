@@ -70,12 +70,14 @@ def get_html(month, day):
     json_file = open('jsons/%d%d.json' % (month, day), 'w', encoding='UTF-8')
     matches = re.findall('\[[^>]+\]', html)
     for match in matches:
-        print(match)
-        json_array = json.loads(match)
-        json_object = json_array[0]
-        if 'provinceName' in json_object and json_object['provinceName'] == '湖北省':
-            json_file.write(match)
-            break
+        try:
+            json_array = json.loads(match)
+            json_object = json_array[0]
+            if 'provinceName' in json_object and json_object['provinceName'] == '湖北省':
+                json_file.write(match)
+                break
+        except:
+            continue
     json_file.close()
 
     # 总体统计数据
@@ -249,6 +251,6 @@ def draw_multiple_pie(month, day):
 if __name__ == '__main__':
     m, d = 2, 6
     get_html(m, d)
-    draw_tendency(m, d)
-    draw_multiple_pie(m, d)
-    draw_multiple_map(m, d)
+    # draw_tendency(m, d)
+    # draw_multiple_pie(m, d)
+    # draw_multiple_map(m, d)
