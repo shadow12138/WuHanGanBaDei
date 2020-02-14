@@ -19,13 +19,13 @@
 - 更新：2020.2.13 09:11 湖北省的确诊标准变了，新增病例骤增了1w5，但愿这是更多人能得到及时治疗的好预兆
 - 更新：2020.2.14 12:19 在新标准下，湖北省的新增病例相比起昨天大幅下降了，其他省份新增确诊持续减少。
 
-# 全国新增病例增长趋势
-<img src="https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r3.png" alt="drawing" width="600"/>
-
 # 全国/各省份疫情地图
 ![image](https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r1.png)
 
 # 全国/各省份疫情统计图
 ![image](https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r2.png)
+
+# 全国新增病例增长趋势
+<img src="https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r3.png" alt="drawing" width="600"/>
 
 
