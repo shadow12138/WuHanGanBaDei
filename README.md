@@ -16,6 +16,8 @@
 - 更新：2020.2.10 08:33
 - 更新：2020.2.11 08:40 不考虑潜伏期的话，其他省份按照现在的下降速度，最多一个星期就不会再有新增病例了。真希望是这样的趋势啊
 - 更新：2020.2.12 08:40 湖北省新增确诊骤降啊！
+- 更新：2020.2.13 09:11 湖北省的确诊标准变了，新增病例骤增了1w5，但愿这是更多人能得到及时治疗的好预兆
+- 更新：2020.2.14 12:19 在新标准下，湖北省的新增病例相比起昨天大幅下降了，其他省份新增确诊持续减少。
 
 # 全国/各省份疫情地图
 ![image](https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r1.png)
@@ -24,5 +26,5 @@
 ![image](https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r2.png)
 
 # 全国新增病例增长趋势
-<img src="https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r3.png" alt="drawing" width="800"/>
+<img src="https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r3.png" alt="drawing" width="600"/>
 
