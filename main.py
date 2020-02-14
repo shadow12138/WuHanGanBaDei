@@ -255,5 +255,5 @@ if __name__ == '__main__':
     m, d = 2, 14
     # get_html(m, d)
     draw_tendency(m, d)
-    # draw_multiple_pie(m, d)
-    # draw_multiple_map(m, d)
+    draw_multiple_pie(m, d)
+    draw_multiple_map(m, d)
