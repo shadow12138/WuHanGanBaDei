@@ -156,6 +156,19 @@ def get_map(labels, counts, where, title, size, pieces):
     return my_map
 
 
+def get_city_name(name):
+    if name.endswith('市') or name.endswith('区') or name.endswith('县') or name.endswith('自治州'):
+        return name
+    return name + '市'
+
+
+def get_city_map(name, defined_cities):
+    for d_name in defined_cities:
+        if len((set(d_name) & set(name))) == len(name):
+            return get_city_name(d_name)
+    return None
+
+
 def draw_multiple_map(month, day):
     page = Page(layout=Page.SimplePageLayout)
     size = ('350px', '380px')
@@ -178,16 +191,10 @@ def draw_multiple_map(month, day):
         labels = []
         for city in p['cities']:
             name = city['cityName']
-            if name.endswith('区'):
-                labels.append(name)
-            else:
-                for d_name in defined_cities:
-                    if len((set(d_name) & set(name))) == len(name):
-                        if name == d_name:
-                            labels.append(name + '市')
-                        else:
-                            labels.append(d_name)
-                        break
+            map_name = get_city_map(name, defined_cities)
+            if not map_name:
+                map_name = get_city_map(name[:-1], defined_cities)
+            labels.append(name if not map_name else map_name)
 
         # 数量
         counts = [city['confirmedCount'] for city in p['cities']]
@@ -257,5 +264,5 @@ if __name__ == '__main__':
     m, d = 2, 15
     get_html(m, d)
     draw_tendency(m, d)
-    # draw_multiple_pie(m, d)
-    # draw_multiple_map(m, d)
+    draw_multiple_pie(m, d)
+    draw_multiple_map(m, d)
