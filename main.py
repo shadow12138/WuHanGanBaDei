@@ -85,15 +85,17 @@ def get_html(month, day):
     matches = re.findall('\{"id":1,[^(>})]+\}', html)
     for match in matches:
         if "infectSource" in match:
+            index = match.find(',"marquee":[')
+            if index != -1:
+                match = match[:index] + '}'
             total_statistic_file.write(match)
             break
     total_statistic_file.close()
 
 
 def draw_tendency(month, day):
-    dates = ['1-22', '1-23', '1-24', '1-25', '1-26', '1-27', '1-28',
-             '1-29', '1-30', '1-31', '2-01', '2-02', '2-04', '2-05', '2-06', '2-07', '2-08', '2-09', '2-10', '2-11',
-             '2-12', '2-13', '2-14']
+    dates = ['1-%d' % i for i in range(22, 31 + 1)]
+    dates.extend(['2-%02d' % i for i in range(1, day)])
     v0 = [131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2102, 2590, 2829, 3235, 3887, 3143, 3399, 2656, 3062, 2478,
           2015, 15152, 5090, 2641]
     v1 = [69, 105, 180, 323, 371, 1291, 840, 1032, 1220, 1347, 1921, 2103, 2345, 3156, 2447, 2841, 2147, 2618, 2097,
@@ -253,7 +255,7 @@ def draw_multiple_pie(month, day):
 
 if __name__ == '__main__':
     m, d = 2, 15
-    # get_html(m, d)
+    get_html(m, d)
     draw_tendency(m, d)
-    draw_multiple_pie(m, d)
-    draw_multiple_map(m, d)
+    # draw_multiple_pie(m, d)
+    # draw_multiple_map(m, d)
