@@ -97,9 +97,9 @@ def draw_tendency(month, day):
     dates = ['1-%d' % i for i in range(22, 31 + 1)]
     dates.extend(['2-%02d' % i for i in range(1, day)])
     v0 = [131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2102, 2590, 2829, 3235, 3887, 3143, 3399, 2656, 3062, 2478,
-          2015, 15152, 5090, 2641, 2009, 2051]
+          2015, 15152, 5090, 2641, 2009, 2051, 1886]
     v1 = [69, 105, 180, 323, 371, 1291, 840, 1032, 1220, 1347, 1921, 2103, 2345, 3156, 2447, 2841, 2147, 2618, 2097,
-          1638, 14840, 4823, 2420, 1843, 1933]
+          1638, 14840, 4823, 2420, 1843, 1933, 1807]
     v2 = [v0[i] - v1[i] for i in range(len(v0))]
     print(v2)
     c = (
@@ -126,7 +126,7 @@ def draw_tendency(month, day):
             .set_global_opts(title_opts=opts.TitleOpts(title=""),
                              yaxis_opts=opts.AxisOpts(
                                  max_=16000,
-                                 min_=100,
+                                 min_=10,
                                  type_="log",
                                  name="y",
                                  splitline_opts=opts.SplitLineOpts(is_show=True),
@@ -261,7 +261,7 @@ def draw_multiple_pie(month, day):
 
 
 if __name__ == '__main__':
-    m, d = 2, 17
+    m, d = 2, 18
     get_html(m, d)
     draw_tendency(m, d)
     draw_multiple_pie(m, d)
