@@ -23,6 +23,7 @@
 - 更新：2020.2.17 09:19
 - 更新：2020.2.18 10:13
 - 更新：2020.2.19 09:24
+- 更新：2020.2.20 08:45
 
 # 全国/各省份疫情地图
 ![image](https://github.com/shadow12138/WuHanGanBaDei/blob/master/result/r1.png)
