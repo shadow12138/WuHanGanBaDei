@@ -12,7 +12,8 @@ def get_province_data(month, day, province_name=None):
     file.close()
 
     if not province_name:
-        return json_array
+        sort_arr = [json_obj for json_obj in json_array]
+        return sorted(sort_arr, key= lambda x: x['confirmedCount'], reverse=True)
 
     for json_object in json_array:
         if json_object['provinceName'] == province_name:
@@ -97,9 +98,9 @@ def draw_tendency(month, day):
     dates = ['1-%d' % i for i in range(22, 31 + 1)]
     dates.extend(['2-%02d' % i for i in range(1, day)])
     v0 = [131, 259, 444, 688, 769, 1771, 1459, 1737, 1982, 2102, 2590, 2829, 3235, 3887, 3143, 3399, 2656, 3062, 2478,
-          2015, 15152, 5090, 2641, 2009, 2051, 1886, 1749, 385, 397, 643, 416, 517, 406]
+          2015, 15152, 5090, 2641, 2009, 2051, 1886, 1749, 385, 397, 643, 416, 517, 406, 433]
     v1 = [69, 105, 180, 323, 371, 1291, 840, 1032, 1220, 1347, 1921, 2103, 2345, 3156, 2447, 2841, 2147, 2618, 2097,
-          1638, 14840, 4823, 2420, 1843, 1933, 1807, 1693, 349, 366, 630, 398, 499, 401]
+          1638, 14840, 4823, 2420, 1843, 1933, 1807, 1693, 349, 366, 630, 398, 499, 401, 409]
     v2 = [v0[i] - v1[i] for i in range(len(v0))]
     print(v2)
     c = (
@@ -261,7 +262,7 @@ def draw_multiple_pie(month, day):
 
 
 if __name__ == '__main__':
-    m, d = 2, 25
+    m, d = 2, 26
     get_html(m, d)
     draw_tendency(m, d)
     draw_multiple_pie(m, d)
